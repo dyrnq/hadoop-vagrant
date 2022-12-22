@@ -52,7 +52,7 @@ Extract, Load, Transform (ELT) is a data integration process for transferring ra
 | adminer       | adminer                   | 172.21.0.10 |                    | adminer:4.8.1                 |
 | mysql         | mysql(standalone)         | 172.21.0.11 |                    | debezium/example-mysql:1.1    |
 | postgres      | postgres(standalone)      | 172.21.0.12 |                    | debezium/example-postgres:1.1 |
-| elasticsearch | elasticsearch(standalone) | 172.21.0.13 |                    | elastic/filebeat:8.5.3        |
+| elasticsearch | elasticsearch(standalone) | 172.21.0.13 |                    | elastic/elasticsearch:7.6.0   |
 | kibana        | kibana                    | 172.21.0.14 |                    | elastic/kibana:7.6.0          |
 | redis         | redis(standalone)         | 172.21.0.15 |                    | redis:6.2.6                   |
 | hadoop1       | hdfs: NameNode, yarn: RM  | 172.21.0.21 | /opt/hadoop        |                               |
