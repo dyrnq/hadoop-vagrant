@@ -1,0 +1,413 @@
+version: '3.9'
+
+services:
+  zoo1:
+    restart: always
+    image: bitnami/zookeeper:3.8.0
+    container_name: zoo1
+    hostname: zoo1
+    ports:
+      - 21811:2181
+    environment:
+      - ZOO_HEAP_SIZE=512    
+      - ZOO_SERVER_ID=1
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVERS=0.0.0.0:2888:3888,zoo2:2888:3888,zoo3:2888:3888
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - /data/zoo/data1:/bitnami/zookeeper
+    networks:
+      default:
+        ipv4_address: 172.21.0.3
+
+  zoo2:
+    restart: always
+    image: bitnami/zookeeper:3.8.0
+    container_name: zoo2
+    hostname: zoo2
+    ports:
+      - 21812:2181
+    environment:
+      - ZOO_HEAP_SIZE=512
+      - ZOO_SERVER_ID=2
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVERS=zoo1:2888:3888,0.0.0.0:2888:3888,zoo3:2888:3888
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - /data/zoo/data2:/bitnami/zookeeper
+    networks:
+      default:
+        ipv4_address: 172.21.0.4
+
+  zoo3:
+    restart: always
+    image: bitnami/zookeeper:3.8.0
+    container_name: zoo3
+    hostname: zoo3
+    ports:
+      - 21813:2181
+    environment:
+      - ZOO_HEAP_SIZE=512
+      - ZOO_SERVER_ID=3
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVERS=zoo1:2888:3888,zoo2:2888:3888,0.0.0.0:2888:3888
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - /data/zoo/data3:/bitnami/zookeeper
+    networks:
+      default:
+        ipv4_address: 172.21.0.5
+
+  zoonavigator:
+    restart: always
+    image: elkozmon/zoonavigator:latest
+    container_name: zoonavigator
+    hostname: zoonavigator
+    ports:
+      - 9000:9000
+    environment:
+      - HTTP_PORT=9000
+    volumes:
+      - /etc/timezone:/etc/timezone
+    networks:
+      default:
+        ipv4_address: 172.21.0.6
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+
+  # gendata:
+  #   restart: unless-stopped
+  #   image: golang:1.19.4-bullseye
+  #   container_name: gendata
+  #   hostname: gendata
+  #   volumes:
+  #     - /dev/shm:/dev/shm
+  #     - ./mount/gendata:/app
+  #   command:
+  #     - /bin/bash
+  #     - -c
+  #     - |
+  #       # while true; do
+  #       #   echo date >> /dev/shm/staging.csv;
+  #       # done
+  #       go env -w GO111MODULE=on
+  #       go env -w GOPROXY=https://goproxy.cn,direct
+  #       cd /app
+  #       if [ ! -f go.mod ]; then
+  #         go mod init app
+  #         go mod tidy
+  #       fi
+  #       go run main.go >> /dev/shm/staging.csv
+  #   networks:
+  #     default:
+  #       ipv4_address: 172.21.0.7
+
+  filebeat:
+    restart: unless-stopped
+    image: elastic/filebeat:8.5.3
+    container_name: filebeat
+    hostname: filebeat
+    command: -e -c /tmp/csv.to.kafka.yml
+    volumes:
+      - /dev/shm:/dev/shm
+      - /data/filebeat/filebeat.csv.to.kafka.yml:/tmp/csv.to.kafka.yml:ro
+    networks:
+      default:
+        ipv4_address: 172.21.0.8
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+      # - gendata
+
+
+
+  kafka1:
+    image: docker.io/bitnami/kafka:3.3
+    container_name: kafka1
+    hostname: kafka1
+    ports:
+      - 19092:9092
+      - 19093:9093
+    volumes:
+      - /data/kafka_data/kafka1:/bitnami/kafka
+      - /etc/timezone:/etc/timezone
+    environment:
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zoo1:2181,zoo2:2181,zoo3:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka1:9092,EXTERNAL://192.168.22.222:19093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    networks:
+      default:
+        ipv4_address: 172.21.0.31
+
+
+  kafka2:
+    image: docker.io/bitnami/kafka:3.3
+    container_name: kafka2
+    hostname: kafka2
+    ports:
+      - 29092:9092
+      - 29093:9093
+    volumes:
+      - /data/kafka_data/kafka2:/bitnami/kafka
+      - /etc/timezone:/etc/timezone
+    environment:
+      - KAFKA_CFG_BROKER_ID=2
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zoo1:2181,zoo2:2181,zoo3:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka2:9092,EXTERNAL://192.168.22.222:29093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    networks:
+      default:
+        ipv4_address: 172.21.0.32
+
+
+  kafka3:
+    image: docker.io/bitnami/kafka:3.3
+    container_name: kafka3
+    hostname: kafka3
+    ports:
+      - 39092:9092
+      - 39093:9093
+    volumes:
+      - /data/kafka_data/kafka3:/bitnami/kafka
+      - /etc/timezone:/etc/timezone
+    environment:
+      - KAFKA_CFG_BROKER_ID=3
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zoo1:2181,zoo2:2181,zoo3:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka3:9092,EXTERNAL://192.168.22.222:39093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    networks:
+      default:
+        ipv4_address: 172.21.0.33
+
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    hostname: kafka-ui
+    ports:
+      - 28080:8080
+    volumes:
+      - /etc/timezone:/etc/timezone
+    environment:
+      - LOGGING_LEVEL_COM_PROVECTUS=INFO
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka1:9092,kafka2:9092,kafka3:9092
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      default:
+        ipv4_address: 172.21.0.9
+
+
+
+  adminer:
+    restart: always
+    image: adminer:4.8.1
+    container_name: adminer
+    ports:
+      - "8080:8080"
+    volumes:
+      - /etc/timezone:/etc/timezone
+    networks:
+      default:
+        ipv4_address: 172.21.0.10
+  postgres:
+    restart: always
+    image: debezium/example-postgres:1.1
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - TZ=Asia/Shanghai
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - /data/postgres-data:/var/lib/postgresql/data
+    networks:
+      default:
+        ipv4_address: 172.21.0.11
+  mysql:
+    restart: always
+    image: debezium/example-mysql:1.1
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_USER=mysqluser
+      - MYSQL_PASSWORD=mysqlpw
+      - TZ=Asia/Shanghai
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - /data/mysql-data:/var/lib/mysql
+    networks:
+      default:
+        ipv4_address: 172.21.0.12
+  elasticsearch:
+    restart: always
+    image: elastic/elasticsearch:7.6.0
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+      - TZ=Asia/Shanghai
+    volumes:
+      - /etc/timezone:/etc/timezone
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      default:
+        ipv4_address: 172.21.0.13
+  kibana:
+    restart: always
+    image: elastic/kibana:7.6.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    volumes:
+      - /etc/timezone:/etc/timezone
+    networks:
+      default:
+        ipv4_address: 172.21.0.14
+  redis:
+    restart: always
+    image: redis:6.2.6
+    container_name: redis
+    command: redis-server --port 6379 --appendonly yes --protected-mode no
+    ports:
+      - 6379:6379
+    volumes:
+      - /etc/timezone:/etc/timezone
+    networks:
+      default:
+        ipv4_address: 172.21.0.15
+  hadoop1:
+    restart: always
+    image: base:1
+    container_name: hadoop1
+    hostname: hadoop1
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - /data/hadoop_data/hadoop1:/data/hadoop
+      - ./mount/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./mount/hadoop/hadoop-env.sh:/opt/hadoop/etc/hadoop/hadoop-env.sh
+      - ./mount/hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./mount/hadoop/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./mount/hadoop/workers:/opt/hadoop/etc/hadoop/workers
+      - ./mount/hadoop/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+      - ./mount/hive/hive-site.xml:/opt/hive/conf/hive-site.xml
+      - ./mount/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./mount/spark/spark-env.sh:/opt/spark/conf/spark-env.sh
+    ports:
+      - "8088:8088"
+      - "9870:9870"
+      - "18080:18080"
+    networks:
+      default:
+        ipv4_address: 172.21.0.21
+  hadoop2:
+    restart: always
+    image: base:1
+    container_name: hadoop2
+    hostname: hadoop2
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - /data/hadoop_data/hadoop2:/data/hadoop
+      - ./mount/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./mount/hadoop/hadoop-env.sh:/opt/hadoop/etc/hadoop/hadoop-env.sh
+      - ./mount/hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./mount/hadoop/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./mount/hadoop/workers:/opt/hadoop/etc/hadoop/workers
+      - ./mount/hadoop/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    networks:
+      default:
+        ipv4_address: 172.21.0.22
+  hadoop3:
+    restart: always
+    image: base:1
+    container_name: hadoop3
+    hostname: hadoop3
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - /data/hadoop_data/hadoop3:/data/hadoop
+      - ./mount/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./mount/hadoop/hadoop-env.sh:/opt/hadoop/etc/hadoop/hadoop-env.sh
+      - ./mount/hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./mount/hadoop/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./mount/hadoop/workers:/opt/hadoop/etc/hadoop/workers
+      - ./mount/hadoop/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    networks:
+      default:
+        ipv4_address: 172.21.0.23
+  hadoop4:
+    restart: always
+    image: base:1
+    container_name: hadoop4
+    hostname: hadoop4
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - /data/hadoop_data/hadoop4:/data/hadoop
+      - ./mount/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./mount/hadoop/hadoop-env.sh:/opt/hadoop/etc/hadoop/hadoop-env.sh
+      - ./mount/hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./mount/hadoop/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./mount/hadoop/workers:/opt/hadoop/etc/hadoop/workers
+      - ./mount/hadoop/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    networks:
+      default:
+        ipv4_address: 172.21.0.24
+
+
+networks:
+  default:
+    name: superman
+    external: true
+
+
+# networks:
+#   default:
+#     name: my-pre-existing-network
+#     external: true

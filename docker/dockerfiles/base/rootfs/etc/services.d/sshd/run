@@ -1,0 +1,10 @@
+#!/usr/bin/with-contenv sh
+
+
+if [ -n "$TZ" ]; then
+    ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime || true
+    (dpkg-reconfigure --frontend noninteractive tzdata >/dev/null 2>&1 || echo ${TZ} > /etc/timezone ) || true
+fi
+
+sshd -T
+exec /usr/sbin/sshd -D -4
