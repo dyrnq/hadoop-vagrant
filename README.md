@@ -20,6 +20,8 @@ Extract, Load, Transform (ELT) is a data integration process for transferring ra
   - [requirements](#requirements)
   - [architecture](#architecture)
   - [hadoop](#hadoop)
+    - [docker build](#docker-build)
+    - [startup containers](#startup-containers)
     - [hdfs cluster](#hdfs-cluster)
     - [yarn cluster](#yarn-cluster)
     - [hive](#hive)
@@ -37,6 +39,7 @@ Extract, Load, Transform (ELT) is a data integration process for transferring ra
 
 - VirtualBox
 - Vagrant
+- docker
 
 ## architecture
 
@@ -64,6 +67,22 @@ Extract, Load, Transform (ELT) is a data integration process for transferring ra
 | kafka3        | kafka cluster             | 172.21.0.33 | /bitnami/kafka     | bitnami/kafka:3.3             |
 
 ## hadoop
+
+### docker build
+
+```bash
+vagrant up
+vagrant ssh
+cd /vagrant/docker/dockerfiles/base
+build.sh
+```
+
+### startup containers
+
+```bash
+cd /vagrant/docker
+./run.sh
+```
 
 ### hdfs cluster
 
