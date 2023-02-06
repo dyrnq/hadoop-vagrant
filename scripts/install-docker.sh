@@ -110,7 +110,7 @@ EOF
 ## 加载linux内核模块
 
 if ! systemctl is-active systemd-modules-load.service >/dev/null 2>&1; then
-	systemctl enable systemd-modules-load.service
+    systemctl enable systemd-modules-load.service
 fi
 
 cat > /etc/modules-load.d/90-net.conf<<EOF
@@ -158,7 +158,7 @@ mkdir -p /etc/docker && cat >/etc/docker/daemon.json <<EOF
     "live-restore": true,
     "exec-opts": ["native.cgroupdriver=systemd"],
     "registry-mirrors": [
-	    "https://docker.mirrors.ustc.edu.cn"
+        "https://docker.mirrors.ustc.edu.cn"
     ],
     "log-level": "info",
     "log-driver": "json-file",
@@ -169,9 +169,9 @@ mkdir -p /etc/docker && cat >/etc/docker/daemon.json <<EOF
 EOF
 systemctl daemon-reload
 if systemctl is-active docker &>/dev/null; then
-	systemctl restart docker
+    systemctl restart docker
 else
-	systemctl enable --now docker
+    systemctl enable --now docker
 fi
 
 docker info

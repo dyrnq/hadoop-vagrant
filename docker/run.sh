@@ -8,33 +8,33 @@ set -o errexit
 DEBUG=${DEBUG:-}
 
 while [ $# -gt 0 ]; do
-	case "$1" in
-		--verbose|--debug)
-			DEBUG=0;
-			;;
-		--iface|-i)
-			iface="$2"
-			shift
-			;;
-		--*)
-			echo "Illegal option $1"
-			;;
-	esac
-	shift $(( $# > 0 ? 1 : 0 ))
+    case "$1" in
+        --verbose|--debug)
+            DEBUG=0;
+            ;;
+        --iface|-i)
+            iface="$2"
+            shift
+            ;;
+        --*)
+            echo "Illegal option $1"
+            ;;
+    esac
+    shift $(( $# > 0 ? 1 : 0 ))
 done
 
 command_exists() {
-	command -v "$@" > /dev/null 2>&1
+    command -v "$@" > /dev/null 2>&1
 }
 
 
 
 is_debug() {
-	if [ -z "$DEBUG" ]; then
-		return 1
-	else
-		return 0
-	fi
+    if [ -z "$DEBUG" ]; then
+        return 1
+    else
+        return 0
+    fi
 }
 
 
