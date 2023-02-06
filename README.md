@@ -39,7 +39,7 @@ Extract, Load, Transform (ELT) is a data integration process for transferring ra
 
 - VirtualBox
 - Vagrant
-- docker
+- Docker
 
 ## architecture
 
@@ -122,19 +122,22 @@ cd /opt/hive/bin && ./schematool -initSchema -dbType postgres -verbose
 ```bash
 docker exec -it -u hduser hadoop1 bash
 
+# source /etc/profile by manual
+. /etc/profile
+
 # 启动metastore
 mkdir -p /opt/hadoop/logs
-PATH=$PATH:/opt/hive/bin:/opt/hive/sbin hive --service metastore --hiveconf hive.root.logger=INFO,console > /opt/hadoop/logs/metastore.log 2>&1 &
+hive --service metastore --hiveconf hive.root.logger=INFO,console > /opt/hadoop/logs/metastore.log 2>&1 &
 
 
 # 启动hiveserver2
 mkdir -p /opt/hadoop/logs
-PATH=$PATH:/opt/hive/bin:/opt/hive/sbin hive --service hiveserver2 --hiveconf hive.root.logger=INFO,console > /opt/hadoop/logs/hiveserver2.log 2>&1 &
+hive --service hiveserver2 --hiveconf hive.root.logger=INFO,console > /opt/hadoop/logs/hiveserver2.log 2>&1 &
 ```
 
 ```bash
 # 启动 hive cli
-PATH=$PATH:/opt/hive/bin:/opt/hive/sbin hive --service cli
+hive --service cli
 ```
 
 ### spark
