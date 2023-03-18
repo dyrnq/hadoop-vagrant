@@ -102,20 +102,8 @@ docker exec -it -u hduser hadoop1 bash -c "nohup /opt/hadoop/sbin/start-yarn.sh"
 #### create metastore_db on postgres
 
 ```bash
-
-docker exec -it postgres bash
-
-if [ $(psql -tA --username "postgres" -c "select count(1) from pg_database where datname='metastore_db'") = "0" ]; then
-    psql -v ON_ERROR_STOP=1 --username "postgres" --no-password -c "create database metastore_db with encoding='utf8' TEMPLATE template0;"
-else
-    echo "metastore_db exists"
-fi
-
-
-docker exec -it -u hduser hadoop1 bash
-# cd /opt/hive/lib && wget https://maven.aliyun.com/repository/central/org/postgresql/postgresql/42.5.1/postgresql-42.5.1.jar
-
-cd /opt/hive/bin && ./schematool -initSchema -dbType postgres -verbose
+cd /vagrant/docker
+./hive-metastore-init-schema.sh
 ```
 
 #### start metastore and hiveserver2
