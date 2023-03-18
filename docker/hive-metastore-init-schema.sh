@@ -18,3 +18,8 @@ EOF
 docker exec -i -u hduser hadoop1 bash <<EOF
 cd /opt/hive/bin && ./schematool -initSchema -dbType postgres -verbose
 EOF
+
+docker exec -i -u hduser hadoop1 bash <<EOF
+source /etc/profile
+hdfs namenode -format
+EOF
