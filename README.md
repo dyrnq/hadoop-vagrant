@@ -71,6 +71,7 @@ Extract, Load, Transform (ELT) is a data integration process for transferring ra
 ### docker build
 
 ```bash
+export VAGRANT_EXPERIMENTAL="disks"
 vagrant up
 vagrant ssh
 cd /vagrant/docker/dockerfiles/base

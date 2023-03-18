@@ -28,6 +28,7 @@
 Vagrant.configure("2") do |config|
     config.vm.box = "ubuntu/focal64"
     config.vm.box_version = "20221121.0.0"
+    config.vm.disk :disk, size: "500GB", primary: true
 
     config.vm.box_check_update = false
     config.ssh.insert_key = false
