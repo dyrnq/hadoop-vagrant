@@ -77,32 +77,29 @@ services:
       - zoo2
       - zoo3
 
-  # gendata:
-  #   restart: unless-stopped
-  #   image: golang:1.19.4-bullseye
-  #   container_name: gendata
-  #   hostname: gendata
-  #   volumes:
-  #     - /dev/shm:/dev/shm
-  #     - ./mount/gendata:/app
-  #   command:
-  #     - /bin/bash
-  #     - -c
-  #     - |
-  #       # while true; do
-  #       #   echo date >> /dev/shm/staging.csv;
-  #       # done
-  #       go env -w GO111MODULE=on
-  #       go env -w GOPROXY=https://goproxy.cn,direct
-  #       cd /app
-  #       if [ ! -f go.mod ]; then
-  #         go mod init app
-  #         go mod tidy
-  #       fi
-  #       go run main.go >> /dev/shm/staging.csv
-  #   networks:
-  #     default:
-  #       ipv4_address: 172.21.0.7
+  gendata:
+    restart: unless-stopped
+    image: golang:1.19.4-bullseye
+    container_name: gendata
+    hostname: gendata
+    volumes:
+      - /data/gendata:/data/gendata
+      - ./mount/gendata:/app
+    command:
+      - /bin/bash
+      - -c
+      - |
+        go env -w GO111MODULE=on
+        go env -w GOPROXY=https://goproxy.cn,direct
+        cd /app
+        if [ ! -f go.mod ]; then
+          go mod init app
+          go mod tidy
+        fi
+        go run main.go >> /data/gendata/staging.csv
+    networks:
+      default:
+        ipv4_address: 172.21.0.7
 
   filebeat:
     restart: unless-stopped
@@ -111,7 +108,7 @@ services:
     hostname: filebeat
     command: -e -c /tmp/csv.to.kafka.yml
     volumes:
-      - /dev/shm:/dev/shm
+      - /data/gendata:/data/gendata
       - /data/filebeat/filebeat.csv.to.kafka.yml:/tmp/csv.to.kafka.yml:ro
     networks:
       default:
@@ -120,7 +117,7 @@ services:
       - kafka1
       - kafka2
       - kafka3
-      # - gendata
+      - gendata
 
 
 

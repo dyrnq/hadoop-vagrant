@@ -52,6 +52,7 @@ docker network list
 docker compose down --remove-orphans || true
 
 
+sudo mkdir -p /data/gendata
 sudo mkdir -p /data/filebeat
 
 sudo rm -rf /data/filebeat/filebeat.csv.to.kafka.yml
@@ -61,7 +62,7 @@ filebeat.inputs:
 - type: log
   enabled: true
   paths:
-    - /dev/shm/staging.csv
+    - /data/gendata/staging.csv
 output.kafka:
   hosts: ["kafka1:9092", "kafka2:9092", "kafka3:9092"]
   topic: test
