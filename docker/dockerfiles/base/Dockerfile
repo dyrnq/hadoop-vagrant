@@ -176,15 +176,17 @@ mkdir -p /usr/local/jvm/java-11-openjdk-amd64 && \
 mkdir -p ${HADOOP_HOME} && \
 mkdir -p ${HIVE_HOME} && \
 mkdir -p ${SPARK_HOME} && \
-curl --retry 3 -fSL -# https://mirrors.sustech.edu.cn/Adoptium/11/jdk/x64/linux/OpenJDK11U-jdk_x64_linux_hotspot_11.0.18_10.tar.gz | tar -xvz --strip-components 1 -C /usr/local/jvm/java-11-openjdk-amd64 && \
-curl --retry 3 -fSL -# https://mirrors.sustech.edu.cn/Adoptium/8/jdk/x64/linux/OpenJDK8U-jdk_x64_linux_hotspot_8u362b09.tar.gz | tar -xvz --strip-components 1 -C /usr/local/jvm/java-8-openjdk-amd64 && \
-curl --retry 3 -fSL -# https://mirrors.sustech.edu.cn/apache/hadoop/common/hadoop-3.3.3/hadoop-3.3.3.tar.gz | tar -xvz --strip-components 1 -C ${HADOOP_HOME} && \
-curl --retry 3 -fSL -# https://mirrors.sustech.edu.cn/apache/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz | tar -xvz --strip-components 1 -C ${HIVE_HOME} && \
-curl --retry 3 -fSL -# https://mirrors.sustech.edu.cn/apache/spark/spark-3.2.3/spark-3.2.3-bin-hadoop3.2-scala2.13.tgz | tar -xvz --strip-components 1 -C ${SPARK_HOME} && \
+curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/adoptium/releases/temurin11-binaries/jdk-11.0.19%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.19_7.tar.gz | tar -xvz --strip-components 1 -C /usr/local/jvm/java-11-openjdk-amd64 && \
+curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/adoptium/releases/temurin8-binaries/jdk8u372-b07/OpenJDK8U-jdk_x64_linux_hotspot_8u372b07.tar.gz | tar -xvz --strip-components 1 -C /usr/local/jvm/java-8-openjdk-amd64 && \
+curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/apache/hadoop/common/hadoop-3.3.3/hadoop-3.3.3.tar.gz | tar -xvz --strip-components 1 -C ${HADOOP_HOME} && \
+curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/apache/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz | tar -xvz --strip-components 1 -C ${HIVE_HOME} && \
+curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/apache/spark/spark-3.3.2/spark-3.3.2-bin-hadoop3.tgz | tar -xvz --strip-components 1 -C ${SPARK_HOME} && \
 echo ""
 
 # https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.17%2B8/OpenJDK11U-jdk_x64_linux_hotspot_11.0.17_8.tar.gz
 # https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u352-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u352b08.tar.gz
+# https://mirrors.ustc.edu.cn/adoptium/releases/temurin11-binaries/jdk-11.0.19%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.19_7.tar.gz
+# https://mirrors.ustc.edu.cn/adoptium/releases/temurin8-binaries/jdk8u372-b07/OpenJDK8U-jdk_x64_linux_hotspot_8u372b07.tar.gz
 
 # https://mirrors.sustech.edu.cn/Adoptium/11/jdk/x64/linux/OpenJDK11U-jdk_x64_linux_hotspot_11.0.17_8.tar.gz
 
