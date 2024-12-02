@@ -26,8 +26,8 @@
 
 
 Vagrant.configure("2") do |config|
-    config.vm.box = "ubuntu/focal64"
-    config.vm.box_version = "20221121.0.0"
+    config.vm.box = "ubuntu/jammy64"
+    # config.vm.box_version = "20221121.0.0"
     config.vm.disk :disk, size: "500GB", primary: true
 
     config.vm.box_check_update = false
@@ -117,15 +117,15 @@ Vagrant.configure("2") do |config|
             #     end
             #     end
             # end
-
-            machine.vm.provision "shell", inline: <<-SHELL
-                echo "root:vagrant" | sudo chpasswd
-                timedatectl set-timezone "Asia/Shanghai"
-            SHELL
+            machine.vm.provision "shell", path: "scripts/provision.sh"
+            # machine.vm.provision "shell", inline: <<-SHELL
+            #     echo "root:vagrant" | sudo chpasswd
+            #     timedatectl set-timezone "Asia/Shanghai"
+            # SHELL
 
 
             #machine.vm.provision :shell, path: "scripts/lvm2-fdisk.sh"
-            machine.vm.provision :shell, path: "scripts/install-docker.sh"
+            # machine.vm.provision :shell, path: "scripts/install-docker.sh"
 
             # machine.vm.provision "shell", inline: <<-SHELL
             #     reboot
