@@ -1,17 +1,50 @@
 #!/usr/bin/env bash
 
-# echo "root:vagrant" | sudo chpasswd
-# timedatectl set-timezone "Asia/Shanghai"
+iface="enp0s8"
+
+
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --iface|-i)
+            iface="$2"
+            shift
+            ;;
+        --*)
+            echo "Illegal option $1"
+            ;;
+    esac
+    shift $(( $# > 0 ? 1 : 0 ))
+done
+
+ip4=$(/sbin/ip -o -4 addr list "${iface}" | awk '{print $4}' |cut -d/ -f1 | head -n1);
+
+
+command_exists() {
+    command -v "$@" > /dev/null 2>&1
+}
+
+
+
+
+fun_system() {
+
+## 设置时区
+
+timedatectl set-timezone "Asia/Shanghai"
+
+## 关闭防火墙
+
 systemctl is-active firewalld >/dev/null 2>&1 && systemctl disable --now firewalld
 systemctl is-active dnsmasq >/dev/null 2>&1 && systemctl disable --now dnsmasq
 systemctl is-active apparmor >/dev/null 2>&1 && systemctl disable --now apparmor
 systemctl is-active ufw >/dev/null 2>&1 && systemctl disable --now ufw
 
-sed -i "s@http://.*archive.ubuntu.com@http://mirrors.sustech.edu.cn@g" /etc/apt/sources.list
-sed -i "s@http://.*security.ubuntu.com@http://mirrors.sustech.edu.cn@g" /etc/apt/sources.list
+## 关闭swap
 
-
-
+#sed -ri 's/.*swap.*/#&/' /etc/fstab
+swapoff -a && sysctl -w vm.swappiness=0
+sed -ri '/^[^#]*swap/s@^@#@' /etc/fstab
 
 ## 关闭selinux
 
@@ -104,6 +137,17 @@ cat > /etc/security/limits.conf <<'EOF'
 *       soft        memlock     32000
 *       hard        memlock     32000
 *       soft        msgqueue    8192000
+*       hard        msgqueue    8192000
+root       soft        core        unlimited
+root       hard        core        unlimited
+root       soft        nproc       1000000
+root       hard        nproc       1000000
+root       soft        nofile      1000000
+root       hard        nofile      1000000
+root       soft        memlock     32000
+root       hard        memlock     32000
+root       soft        msgqueue    8192000
+root       hard        msgqueue    8192000
 EOF
 
 
@@ -122,43 +166,45 @@ systemctl daemon-reload && systemctl restart systemd-modules-load.service
 
 lsmod | grep br_netfilter
 
-
-
-mkdir -p /etc/systemd/resolved.conf.d/
-cat >/etc/systemd/resolved.conf.d/99-dns.conf << EOF
-[Resolve]
-DNS=114.114.114.114 8.8.8.8
-DNSStubListener=no
-EOF
-ln -s -f /run/systemd/resolve/resolv.conf /etc/resolv.conf
-systemctl daemon-reload && systemctl restart systemd-resolved.service && systemctl status -l systemd-resolved.service --no-pager
+}
 
 
 
+
+
+fun_install() {
 
 while true ; do
-    apt update -y && \
-    apt install -y apt-transport-https bash-completion bridge-utils ca-certificates conntrack conntrack curl difference gettext gnupg2 htop iftop iproute2 ipset iptables ipvsadm jq less locales lrzsz lsof mtr netcat net-tools nfs-common nload nmap nmap-common openssh-client procps psmisc rsync socat software-properties-common strace sysstat tar tcpdump telnet tree unzip vim wget xfsprogs xz-utils && \
-    break
+  apt update -y && \
+  apt install -y apt-transport-https bash-completion bridge-utils ca-certificates conntrack conntrack curl difference gettext gnupg2 htop iftop iproute2 ipset iptables ipvsadm jq less locales lrzsz lsof mtr netcat net-tools nfs-common nload nmap nmap-common openssh-client procps psmisc rsync socat software-properties-common strace sysstat tar tcpdump telnet tree unzip vim wget xfsprogs xz-utils && \
+  break
 done
+
+
+
+
+## https://docs.docker.com/engine/install/ubuntu/
 mkdir -p /etc/apt/keyrings
-test -f /etc/apt/keyrings/docker.gpg || curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
 echo \
-"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.sustech.edu.cn/docker-ce/linux/ubuntu \
-$(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.sustech.edu.cn/docker-ce/linux/ubuntu \
+  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 apt update -y && apt-cache madison docker-ce
 
 
-apt-get -y install docker-ce docker-compose-plugin
+apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-mkdir -p /etc/docker && cat >/etc/docker/daemon.json <<EOF
+# apt-get install docker-compose-plugin
+
+mkdir -p /etc/docker && \
+cat >/etc/docker/daemon.json <<EOF
 {
     "live-restore": true,
     "exec-opts": ["native.cgroupdriver=systemd"],
     "registry-mirrors": [
-        "https://docker.mirrors.ustc.edu.cn"
+        "https://docker.m.daocloud.io"
     ],
     "log-level": "info",
     "log-driver": "json-file",
@@ -175,10 +221,8 @@ else
 fi
 
 docker info
-usermod -aG docker vagrant
+}
 
-cat > /etc/ssh/ssh_config.d/10-ssh.conf <<EOF
-Host *
-    StrictHostKeyChecking=no
-    UserKnownHostsFile=/dev/null
-EOF
+
+fun_system && fun_install
+
