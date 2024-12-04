@@ -34,9 +34,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 
 RUN set -eux; \
-    sed -i "s@http://.*archive.ubuntu.com@http://mirrors.sustech.edu.cn@g" /etc/apt/sources.list && \
-    sed -i "s@http://.*security.ubuntu.com@http://mirrors.sustech.edu.cn@g" /etc/apt/sources.list && \
-    sed -i "s@http://deb.debian.org@http://mirrors.sustech.edu.cn@g" /etc/apt/sources.list && \
     apt-get clean && \
     apt-get update && \
     apt-get -y upgrade && \
@@ -133,12 +130,11 @@ RUN set -eux; \
          exit 1; \
          ;; \
     esac; \
-    curl --retry 3 -fsSL https://mirrors.sustech.edu.cn/docker-ce/linux/static/stable/${dockerArch}/docker-${DOCKER_VERSION}.tgz | tar -xvz --strip-components 1 -C /usr/local/bin docker/docker; \
     curl ${CURL_OPTS} --retry 3 -fsSL https://github.com/atkrad/wait4x/releases/download/v2.9.1/wait4x-linux-amd64.tar.gz | tar -xvz -C /usr/local/bin wait4x; \
     curl ${CURL_OPTS} --retry 3 -fsSL https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${s6overlayArch}.tar.xz | tar -Jxpv -C /; \
     curl ${CURL_OPTS} --retry 3 -fsSL https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz | tar -Jxpv -C /; \
     curl ${CURL_OPTS} --retry 3 -fsSL https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz | tar -Jxpv -C /; \
-    curl ${CURL_OPTS} --retry 3 -fsSL -o /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$gosuArch"; \
+    curl ${CURL_OPTS} --retry 3 -fsSL https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$gosuArch -o /usr/local/bin/gosu; \
     curl ${CURL_OPTS} --retry 3 -fsSL https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/ripgrep-${RG_VERSION}-x86_64-unknown-linux-musl.tar.gz | tar -xzv --strip-components=1 -C /usr/local/bin/ ripgrep-${RG_VERSION}-x86_64-unknown-linux-musl/rg;  \
     curl ${CURL_OPTS} --retry 3 -fsSL https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64.tar.gz | tar -xzv --strip-components=1 -C /usr/local/bin/ --transform "s/yq_linux_amd64/yq/";  \
     curl ${CURL_OPTS} --retry 3 -fsSL https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-x86_64-unknown-linux-gnu.tar.gz | tar -xzv --strip-components=1 -C /usr/local/bin/ fd-v${FD_VERSION}-x86_64-unknown-linux-gnu/fd;  \
@@ -149,9 +145,6 @@ RUN set -eux; \
     chmod +x /usr/local/bin/wait4x; \
     gosu --version;
 
-# https://mirrors.sustech.edu.cn/docker-ce/linux/static/stable/x86_64/
-# curl --retry 3 -fsSL https://download.docker.com/linux/static/stable/${dockerArch}/docker-${DOCKER_VERSION}.tgz | tar -xvz --strip-components 1 -C /usr/local/bin docker/docker; \
-# curl --retry 3 -fsSL https://mirrors.sustech.edu.cn/docker-ce/linux/static/stable/${dockerArch}/docker-${DOCKER_VERSION}.tgz | tar -xvz --strip-components 1 -C /usr/local/bin docker/docker; \
 
 
 RUN cp /etc/ssh/sshd_config /etc/ssh/sshd_config_back && cp /etc/pam.d/sshd /etc/pam.d/sshd_back
@@ -176,19 +169,14 @@ mkdir -p /usr/local/jvm/java-11-openjdk-amd64 && \
 mkdir -p ${HADOOP_HOME} && \
 mkdir -p ${HIVE_HOME} && \
 mkdir -p ${SPARK_HOME} && \
-curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/adoptium/releases/temurin11-binaries/jdk-11.0.19%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.19_7.tar.gz | tar -xvz --strip-components 1 -C /usr/local/jvm/java-11-openjdk-amd64 && \
-curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/adoptium/releases/temurin8-binaries/jdk8u372-b07/OpenJDK8U-jdk_x64_linux_hotspot_8u372b07.tar.gz | tar -xvz --strip-components 1 -C /usr/local/jvm/java-8-openjdk-amd64 && \
-curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/apache/hadoop/common/hadoop-3.3.3/hadoop-3.3.3.tar.gz | tar -xvz --strip-components 1 -C ${HADOOP_HOME} && \
-curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/apache/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz | tar -xvz --strip-components 1 -C ${HIVE_HOME} && \
-curl --retry 3 -fSL -# https://mirrors.ustc.edu.cn/apache/spark/spark-3.3.2/spark-3.3.2-bin-hadoop3.tgz | tar -xvz --strip-components 1 -C ${SPARK_HOME} && \
+curl ${CURL_OPTS} --retry 3 -fSL -# https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.25%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.25_9.tar.gz | tar -xvz --strip-components 1 -C /usr/local/jvm/java-11-openjdk-amd64 && \
+curl ${CURL_OPTS} --retry 3 -fSL -# https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u432-b06/OpenJDK8U-jdk_x64_linux_hotspot_8u432b06.tar.gz | tar -xvz --strip-components 1 -C /usr/local/jvm/java-8-openjdk-amd64 && \
+curl ${CURL_OPTS} --retry 3 -fSL -# https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz | tar -xvz --strip-components 1 -C ${HADOOP_HOME} && \
+curl ${CURL_OPTS} --retry 3 -fSL -# https://archive.apache.org/dist/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz | tar -xvz --strip-components 1 -C ${HIVE_HOME} && \
+curl ${CURL_OPTS} --retry 3 -fSL -# https://archive.apache.org/dist/spark/spark-3.3.2/spark-3.3.2-bin-hadoop3.tgz | tar -xvz --strip-components 1 -C ${SPARK_HOME} && \
 echo ""
 
-# https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.17%2B8/OpenJDK11U-jdk_x64_linux_hotspot_11.0.17_8.tar.gz
-# https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u352-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u352b08.tar.gz
-# https://mirrors.ustc.edu.cn/adoptium/releases/temurin11-binaries/jdk-11.0.19%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.19_7.tar.gz
-# https://mirrors.ustc.edu.cn/adoptium/releases/temurin8-binaries/jdk8u372-b07/OpenJDK8U-jdk_x64_linux_hotspot_8u372b07.tar.gz
 
-# https://mirrors.sustech.edu.cn/Adoptium/11/jdk/x64/linux/OpenJDK11U-jdk_x64_linux_hotspot_11.0.17_8.tar.gz
 
 COPY rootfs /
 
